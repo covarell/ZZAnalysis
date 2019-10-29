@@ -20,11 +20,14 @@
 <use name="MelaAnalytics/GenericMEComputer"/>
 <use name="CommonLHETools/LHEHandler"/>
 <!--use name="RecoEcal/EgammaCoreTools"/-->
-
+<use   name="FWCore/Utilities"/>
+<use   name="boost"/>
+<use   name="hepmc"/>
 <use   name="root"/>
 <use   name="roottmva"/>
-<use name="rootrflx"/>
-<use name="roofitcore"/>
+<use   name="rootrflx"/>
+<use   name="roofitcore"/>
+<lib   name="GenVector"/>
 
 <Flags CPPDEFINES="CMSSW_VERSION=$(shell echo ${CMSSW_VERSION}|sed -e s/CMSSW_// -e s/_//g -e s/patch\.//)"/>
 <Flags CPPDEFINES="CMSSW_VERSION_MAJOR=$(shell echo ${CMSSW_VERSION}|sed -e s/CMSSW_// -e s/_.*//g)"/>
@@ -36,4 +39,11 @@
 
 <library   file="Ntuplizers/*.cc" name="ZZAnalysisAnalysisStepTestNtupleFactories">
   <flags   EDM_PLUGIN="1"/>
+</library>
+
+<flags   EDM_PLUGIN="1"/>
+<library   file="getXsecInFiducial.cc" name="getXsecInFiducial">
+  <use   name="SimDataFormats/GeneratorProducts"/>
+  <use   name="CommonTools/Utils"/>
+  <use   name="DataFormats/JetReco"/>
 </library>
