@@ -255,6 +255,7 @@ namespace {
   std::vector<float> JetJERDown ;
 
   Float_t DiJetMass  = -99;
+  Float_t DiJetMassLHE  = 99999.;
 //   Float_t DiJetMassPlus  = -99;
 //   Float_t DiJetMassMinus  = -99;
   Float_t DiJetDEta  = -99;
@@ -521,6 +522,7 @@ private:
   edm::EDGetTokenT<HTXS::HiggsClassification> htxsToken;
   edm::EDGetTokenT<edm::MergeableCounter> preSkimToken;
   edm::EDGetTokenT<LHERunInfoProduct> lheRunInfoToken;
+  edm::EDGetTokenT< LHEEventProduct > lhep_token;
    
   edm::EDGetTokenT< double > prefweight_token;
   edm::EDGetTokenT< double > prefweightup_token;
@@ -633,6 +635,7 @@ HZZ4lNtupleMaker::HZZ4lNtupleMaker(const edm::ParameterSet& pset) :
   electronToken = consumes<pat::ElectronCollection>(edm::InputTag("slimmedElectrons"));
   preSkimToken = consumes<edm::MergeableCounter,edm::InLumi>(edm::InputTag("preSkimCounter"));
   lheRunInfoToken = consumes<LHERunInfoProduct,edm::InRun>(edm::InputTag("externalLHEProducer"));
+  lhep_token = consumes< LHEEventProduct >(edm::InputTag("externalLHEProducer"));
    
   if (skipEmptyEvents) {
     applySkim=true;
@@ -1711,6 +1714,44 @@ void HZZ4lNtupleMaker::FillCandidate(const pat::CompositeCandidate& cand, bool e
       ZZChi2CFit = cand.userFloat("CFitChi2");
     }
 
+    edm::Handle< LHEEventProduct > lhe_evt ;
+    event.getByToken( lhep_token , lhe_evt ) ;
+
+    int ilepLHE = 0;
+    int iquaLHE = 0;
+    int idquaLHE[15]; 
+    TLorentzVector j1LHE, j2LHE;   
+
+    if (isMC) {
+      for (int i = 0; i < lhe_evt->hepeup().NUP; ++i) {
+	if (lhe_evt->hepeup().ISTUP[i] != 1) continue;
+	if (abs(lhe_evt->hepeup().IDUP[i]) == 11 || abs(lhe_evt->hepeup().IDUP[i]) == 13) ilepLHE++;
+	if (abs(lhe_evt->hepeup().IDUP[i]) < 6) {idquaLHE[iquaLHE] = i;  iquaLHE++;}   
+      }
+      if (ilepLHE == 4) {
+	if (iquaLHE == 2) {
+	  j1LHE.SetPxPyPzE(lhe_evt->hepeup().PUP[idquaLHE[0]][0],lhe_evt->hepeup().PUP[idquaLHE[0]][1],
+			   lhe_evt->hepeup().PUP[idquaLHE[0]][2],lhe_evt->hepeup().PUP[idquaLHE[0]][3]);
+	  j2LHE.SetPxPyPzE(lhe_evt->hepeup().PUP[idquaLHE[1]][0],lhe_evt->hepeup().PUP[idquaLHE[1]][1],
+			   lhe_evt->hepeup().PUP[idquaLHE[1]][2],lhe_evt->hepeup().PUP[idquaLHE[1]][3]);
+	}    
+	if (iquaLHE > 2) {    // VVZ + jets
+          for (int j = 0; j < iquaLHE; ++j) { 
+	    for (int k = 0; k < j; ++k) {
+	      if (lhe_evt->hepeup().MOTHUP[idquaLHE[j]].first == lhe_evt->hepeup().MOTHUP[idquaLHE[k]].first) {  
+		j1LHE.SetPxPyPzE(lhe_evt->hepeup().PUP[idquaLHE[j]][0],lhe_evt->hepeup().PUP[idquaLHE[j]][1],
+				 lhe_evt->hepeup().PUP[idquaLHE[j]][2],lhe_evt->hepeup().PUP[idquaLHE[j]][3]);
+		j2LHE.SetPxPyPzE(lhe_evt->hepeup().PUP[idquaLHE[k]][0],lhe_evt->hepeup().PUP[idquaLHE[k]][1],
+				 lhe_evt->hepeup().PUP[idquaLHE[k]][2],lhe_evt->hepeup().PUP[idquaLHE[k]][3]);
+	      }     	      
+	    }     	      
+	  }
+	}
+	DiJetMassLHE = (j1LHE + j2LHE).M();
+      }
+      //cout << "Test DiJetMassLHE = " << DiJetMassLHE;
+    }	
+
     DiJetMass  = cand.userFloat("DiJetMass");
     DiJetDEta  = cand.userFloat("DiJetDEta");
     DiJetFisher  = cand.userFloat("DiJetFisher");
@@ -2449,6 +2490,7 @@ void HZZ4lNtupleMaker::BookAllBranches(){
   myTree->Book("JetPUValue", JetPUValue, failedTreeLevel >= fullFailedTree);
 
   myTree->Book("DiJetMass",DiJetMass, false);
+  myTree->Book("DiJetMassLHE",DiJetMassLHE, false);
 //   myTree->Book("DiJetMassPlus",DiJetMassPlus, false); // FIXME: add back once filled again
 //   myTree->Book("DiJetMassMinus",DiJetMassMinus, false);
   myTree->Book("DiJetDEta",DiJetDEta, false);
