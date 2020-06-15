@@ -36,22 +36,22 @@ class getXsecInFiducial : public edm::EDAnalyzer
      
      // int         lookFor;
 
-     TH1D*       mZ;
+     /*TH1D*       mZ;
      TH1D*       pTZ ;	   
      TH1D*       nJets ;
      TH1D*       pTjet1 ;
      TH1D*       pTjet2 ;
-     /* TH1D*       pTjet3 ;
+     TH1D*       pTjet3 ;
      TH1D*       pTZ_lowmass ;	   
      TH1D*       nJets_lowmass ;
      TH1D*       pTjet1_lowmass ;
      TH1D*       pTjet2_lowmass ;  */
-     TH1D*       mZZ ;
+     TH1D*       qscale ;
     
      GreaterByPt<reco::GenJet> pTComparatorJ_;
      GreaterByPt<reco::GenParticle> pTComparator_;
      int         nevent, neventpasslep;
-     float       passlepgen, passlep, passjet, passmz, passmzz, passmjjloose, passall ;
+     float       passlepgen, passlep, passjet, passmz, passmzz, passmjjloose, passall,passall2 ;
      edm::EDGetTokenT< LHEEventProduct > lhep_token;
      edm::EDGetTokenT<std::vector<reco::GenParticle> > genp_token;
      edm::EDGetTokenT<edm::View<reco::Candidate> > genp_token2;

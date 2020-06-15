@@ -74,27 +74,28 @@ void getXsecInFiducial::beginJob()
    passmzz = 0.;
    passmjjloose = 0.;
    passall = 0.;
+   passall2 = 0.;
 
    fOutputFile   = new TFile( fOutputFileName.c_str(), "RECREATE" ) ;
    // fHist2muMass  = new TH1D(  "Hist2muMass", "2-mu inv. mass", 100,  60., 120. ) ;  
-   mZ = new TH1D("mZ", "invariant mass of Z", 90, 100., 1000.) ;
+   /* mZ = new TH1D("mZ", "invariant mass of Z", 90, 100., 1000.) ;
    pTZ = new TH1D("pTZ", "pT of Z", 90, 0., 900.) ;
    nJets = new TH1D("nJets", "# of GenJets with pT > 30", 7, -0.5, 6.5) ; 
    pTjet1 = new TH1D("pTjet1", "pT of leading GenJet", 18, 10., 1000.) ;
    pTjet2 = new TH1D("pTjet2", "pT of second leading GenJet", 18, 10., 1000.) ;
-   /* pTjet3 = new TH1D("pTjet3", "pT of third leading GenJet", 18, 10., 100.) ;
+   pTjet3 = new TH1D("pTjet3", "pT of third leading GenJet", 18, 10., 100.) ;
    		 
    pTZ_lowmass = new TH1D("pTZ_lowmass", "pT of Z boson", 21, 0., 140.) ;
    nJets_lowmass = new TH1D("nJets_lowmass", "# of GenJets with pT > 20", 5, -0.5, 4.5) ; 
    pTjet1_lowmass = new TH1D("pTjet1_lowmass", "pT of leading GenJet", 18, 10., 100.) ;
    pTjet2_lowmass = new TH1D("pTjet2_lowmass", "pT of second leading GenJet", 18, 10., 100.) ;
    pTjet3_lowmass = new TH1D("pTjet3_lowmass", "pT of third leading GenJet", 18, 10., 100.) ;  */
-   mZZ = new TH1D("mZZ", "invariant mass of 4l", 90, 100., 1000.) ;
-   mZ->Sumw2(); 
+   qscale = new TH1D("qscale", "SCALUP in lhe event", 80, 10., 1000.) ;
+   /* mZ->Sumw2(); 
    pTZ->Sumw2();
    nJets->Sumw2();
    pTjet1->Sumw2();
-   pTjet2->Sumw2();
+   pTjet2->Sumw2();  */
    /* pTjet3->Sumw2();
    
    pTZ_lowmass->Sumw2();
@@ -102,7 +103,7 @@ void getXsecInFiducial::beginJob()
    pTjet1_lowmass->Sumw2();
    pTjet2_lowmass->Sumw2();
    pTjet3_lowmass->Sumw2();  */
-   mZZ->Sumw2();
+   qscale->Sumw2();
    return ;
 }
  
@@ -113,6 +114,7 @@ void getXsecInFiducial::analyze( const Event& e, const EventSetup& )
    e.getByToken( lhep_token , EvtHandle ) ;
 
    float weight = EvtHandle->hepeup().XWGTUP;
+   float theQscale = EvtHandle->hepeup().SCALUP;
    if (!isqqZZ) weight = 1.;
    if (whichWeight >= 0) weight *= EvtHandle->weights()[whichWeight].wgt/EvtHandle->originalXWGTUP();
    nevent++;
@@ -281,7 +283,11 @@ void getXsecInFiducial::analyze( const Event& e, const EventSetup& )
    if (fabs(genJetsSorted->at(0).eta() - genJetsSorted->at(1).eta()) < 2.4) return;
    if (z1.M() < 400.) return;
    
+   qscale->Fill(theQscale);
    passall+=weight;
+   if (z1.M() < 1000.) return;
+   
+   passall2+=weight;
 
    return ;   
 }
@@ -289,18 +295,18 @@ void getXsecInFiducial::analyze( const Event& e, const EventSetup& )
 void getXsecInFiducial::endJob()
 {
   TObjArray Hlist(0);
-  Hlist.Add(mZ);
+  /* Hlist.Add(mZ);
   Hlist.Add(pTZ);	   
   Hlist.Add(nJets) ;
   Hlist.Add(pTjet1);
-  Hlist.Add(pTjet2); 
+  Hlist.Add(pTjet2); */
   // Hlist.Add(pTjet3) ;
   /* Hlist.Add(pTZ_lowmass);	   
   Hlist.Add(nJets_lowmass) ;
   Hlist.Add(pTjet1_lowmass);
   Hlist.Add(pTjet2_lowmass); 
   Hlist.Add(pTjet3_lowmass) ; */
-  Hlist.Add(mZZ);
+  Hlist.Add(qscale);
   fOutputFile->cd() ;
   Hlist.Write() ;
   fOutputFile->Close() ;
@@ -312,7 +318,8 @@ void getXsecInFiducial::endJob()
   cout << "Sum_weights(pass 4l+2j+2Z) = " << passmz << "\n";
   cout << "Sum_weights(pass 4l+2j+2Z+mZZ) = " << passmzz << "\n";
   cout << "Sum_weights(pass 4l+2j+2Z+mZZ+mjj100) = " << passmjjloose << "\n";
-  cout << "Sum_weights(pass all) = " << passall << "\n"; 
+  cout << "Sum_weights(pass VBS loose) = " << passall << "\n"; 
+  cout << "Sum_weights(pass VBS tight mjj) = " << passall2 << "\n"; 
   return ;
 }
  
